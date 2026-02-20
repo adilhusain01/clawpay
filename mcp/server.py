@@ -24,7 +24,7 @@ Claude Desktop config (~/.claude/claude_desktop_config.json):
         "args": ["/path/to/clawpay/mcp/server.py"],
         "env": {
           "AGENT_PRIVATE_KEY":     "0x...",
-          "CLAWPAY_API_URL":       "https://clawpay-production-bad6.up.railway.app",
+          "CLAWPAY_API_URL":       "https://clawpay-production.up.railway.app",
           "CLAWPAY_API_KEY":       "sk_clawpay_...",
           "USDC_CONTRACT_ADDRESS": "0x..."
         }
@@ -46,7 +46,7 @@ from web3 import Web3
 # ─────────────────────────────────────────────
 
 AGENT_PRIVATE_KEY     = os.environ.get("AGENT_PRIVATE_KEY", "")
-CLAWPAY_API_URL       = os.environ.get("CLAWPAY_API_URL", "https://clawpay-production-bad6.up.railway.app")
+CLAWPAY_API_URL       = os.environ.get("CLAWPAY_API_URL", "https://clawpay-production.up.railway.app")
 CLAWPAY_API_KEY       = os.environ.get("CLAWPAY_API_KEY", "")
 ARB_RPC               = os.environ.get("ARB_RPC", "https://arbitrum-sepolia-testnet.api.pocket.network")
 CHAIN_ID              = int(os.environ.get("CHAIN_ID", "421614"))

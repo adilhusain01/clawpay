@@ -1,6 +1,8 @@
 # ClawPay
 
-The payment layer for your AI agent. Plug it in - Claw pays anywhere on the web, autonomously, without a card on file and without you touching anything.
+The payment layer for your AI agent. Plug it in — ClawPay pays anywhere on the web, autonomously, without a card on file and without you touching anything.
+
+**[Live Demo →](https://claw-pay.vercel.app)**
 
 ## The Problem
 
@@ -10,7 +12,7 @@ Giving your agent a real debit card is worse: it has persistent access to your f
 
 ## What ClawPay Is
 
-ClawPay is the abstraction layer between your agent and the web's payment infrastructure:
+ClawPay sits between your agent and the web's payment infrastructure:
 
 - Your agent calls `buy_virtual_card()` with an amount
 - USDC is deposited into an on-chain escrow - nothing moves without your wallet signature
@@ -144,6 +146,309 @@ Your agent now handles payments autonomously:
 #  ◆  checks out on the merchant site
 #  ✓  card is dead after one charge
 ```
+
+## OpenClaw Integration
+
+Plug ClawPay into [OpenClaw](https://openclaw.dev) so your agent can pay autonomously without any additional setup.
+
+### Prerequisites
+
+- OpenClaw installed and running (`openclaw plugins list` works)
+- A wallet funded with ETH (gas) and USDC on Arbitrum Sepolia — get ETH from the [faucet](https://faucet.triangleplatform.com/arbitrum/sepolia), then mint MockUSDC by calling `mint(yourWallet, amount)` on the [MockUSDC contract](https://sepolia.arbiscan.io/address/0xFCABF780284B0d5997914C5b1ab7Ac34F0F01eaE)
+- A ClawPay API key (`sk_clawpay_...`)
+
+---
+
+### Step 1 — Create the plugin directory
+
+```bash
+mkdir -p ~/.openclaw/extensions/clawpay
+cd ~/.openclaw/extensions/clawpay
+```
+
+---
+
+### Step 2 — Create `package.json`
+
+```json
+{
+  "name": "clawpay",
+  "version": "1.0.0",
+  "openclaw": {
+    "extensions": ["./index.ts"]
+  },
+  "dependencies": {
+    "ethers": "^6.0.0"
+  }
+}
+```
+
+---
+
+### Step 3 — Create `openclaw.plugin.json`
+
+```json
+{
+  "id": "clawpay",
+  "name": "ClawPay",
+  "description": "Buy anything online — deposits USDC into escrow on Arbitrum Sepolia, returns a single-use virtual card.",
+  "version": "1.0.0",
+  "openclaw": {
+    "extensions": ["./index.ts"]
+  },
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "privateKey":     { "type": "string" },
+      "apiKey":         { "type": "string" },
+      "usdcContract":   { "type": "string" }
+    },
+    "required": ["privateKey", "apiKey"]
+  },
+  "uiHints": {
+    "privateKey":   { "label": "Wallet Private Key", "sensitive": true },
+    "apiKey":       { "label": "ClawPay API Key", "sensitive": true },
+    "usdcContract": { "label": "USDC Contract Address (optional override)" }
+  }
+}
+```
+
+---
+
+### Step 4 — Create `index.ts`
+
+```typescript
+import { ethers } from "ethers";
+
+const ARB_SEPOLIA_RPC  = "https://arbitrum-sepolia-testnet.api.pocket.network";
+const CLAWPAY_API_URL  = "https://clawpay-production.up.railway.app";
+
+const ESCROW_ABI = [
+  {
+    inputs: [
+      { internalType: "string",  name: "sessionId", type: "string"  },
+      { internalType: "uint256", name: "amount",    type: "uint256" },
+    ],
+    name: "deposit",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+];
+
+const ERC20_ABI = [
+  {
+    inputs: [
+      { internalType: "address", name: "spender", type: "address" },
+      { internalType: "uint256", name: "amount",  type: "uint256" },
+    ],
+    name: "approve",
+    outputs: [{ internalType: "bool", name: "", type: "bool" }],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "address", name: "account", type: "address" }],
+    name: "balanceOf",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+];
+
+export default function (api: any) {
+  const cfg        = api.config?.plugins?.entries?.clawpay?.config ?? {};
+  const rawKey: string = cfg.privateKey ?? "";
+  const apiKey: string = cfg.apiKey ?? "";
+  const privateKey = rawKey.startsWith("0x") ? rawKey : `0x${rawKey}`;
+
+  function wallet() {
+    const provider = new ethers.JsonRpcProvider(ARB_SEPOLIA_RPC);
+    return new ethers.Wallet(privateKey, provider);
+  }
+
+  // ── buy_virtual_card ───────────────────────────────────────────────
+  api.registerTool(
+    {
+      name: "buy_virtual_card",
+      description:
+        "Use this whenever the user wants to buy something online. " +
+        "Deposits USDC into escrow on Arbitrum Sepolia, then returns a single-use " +
+        "virtual Visa/Mastercard to use at checkout. Card is dead after one charge.",
+      parameters: {
+        type: "object",
+        properties: {
+          amount_usd: {
+            type: "number",
+            description: "Exact amount in USD to put on the card (e.g. 25.00)",
+          },
+          merchant_name: {
+            type: "string",
+            description: "Name of the merchant or website (optional, for labelling)",
+          },
+        },
+        required: ["amount_usd"],
+      },
+      async execute(_id: string, params: { amount_usd: number; merchant_name?: string }) {
+        const w = wallet();
+
+        // 1. Initiate session
+        const initRes = await fetch(`${CLAWPAY_API_URL}/api/v1/payment/initiate`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "X-API-Key": apiKey },
+          body: JSON.stringify({
+            amount_usd:           params.amount_usd,
+            user_wallet_address:  w.address,
+            merchant_name:        params.merchant_name,
+          }),
+        });
+        if (!initRes.ok) {
+          const body = await initRes.text();
+          return { content: [{ type: "text", text: `ClawPay initiate error: ${body}` }] };
+        }
+        const session = await initRes.json();
+        const { session_id, contract_address, usdc_contract, usdc_amount } = session;
+        const amount = BigInt(usdc_amount);
+
+        // 2. Approve USDC spend
+        const usdc = new ethers.Contract(usdc_contract, ERC20_ABI, w);
+        const approveTx = await usdc.approve(contract_address, amount);
+        await approveTx.wait();
+
+        // 3. Deposit into escrow
+        const escrow = new ethers.Contract(contract_address, ESCROW_ABI, w);
+        const depositTx = await escrow.deposit(session_id, amount);
+        const receipt = await depositTx.wait();
+
+        // 4. Confirm → get card
+        const confirmRes = await fetch(`${CLAWPAY_API_URL}/api/v1/payment/confirm`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "X-API-Key": apiKey },
+          body: JSON.stringify({
+            session_id,
+            tx_hash:             receipt.hash,
+            user_wallet_address: w.address,
+          }),
+        });
+        if (!confirmRes.ok) {
+          const body = await confirmRes.text();
+          return { content: [{ type: "text", text: `ClawPay confirm error: ${body}` }] };
+        }
+        const result = await confirmRes.json();
+        const card = result.card ?? result;
+
+        return {
+          content: [{
+            type: "text",
+            text: JSON.stringify({
+              pan:             card.pan,
+              cvv:             card.cvv,
+              exp_month:       card.exp_month,
+              exp_year:        card.exp_year,
+              spend_limit_usd: params.amount_usd,
+              merchant:        params.merchant_name ?? "(any)",
+              note:            "Single-use card — dead after first charge.",
+            }, null, 2),
+          }],
+        };
+      },
+    },
+    { optional: true }
+  );
+
+  // ── check_wallet_balance ───────────────────────────────────────────
+  api.registerTool(
+    {
+      name: "check_wallet_balance",
+      description: "Check the agent wallet's USDC and ETH balances on Arbitrum Sepolia.",
+      parameters: { type: "object", properties: {} },
+      async execute(_id: string, _params: object) {
+        const provider = new ethers.JsonRpcProvider(ARB_SEPOLIA_RPC);
+        const w        = wallet();
+        const usdcAddr = cfg.usdcContract ?? "0xFCABF780284B0d5997914C5b1ab7Ac34F0F01eaE";
+        const usdc     = new ethers.Contract(usdcAddr, ERC20_ABI, provider);
+
+        const [usdcBal, ethBal] = await Promise.all([
+          usdc.balanceOf(w.address),
+          provider.getBalance(w.address),
+        ]);
+
+        return {
+          content: [{
+            type: "text",
+            text: JSON.stringify({
+              wallet: w.address,
+              usdc:   `${(Number(usdcBal) / 1e6).toFixed(2)} USDC`,
+              eth:    `${ethers.formatEther(ethBal)} ETH`,
+            }, null, 2),
+          }],
+        };
+      },
+    },
+    { optional: true }
+  );
+}
+```
+
+---
+
+### Step 5 — Install dependencies
+
+```bash
+cd ~/.openclaw/extensions/clawpay
+npm install
+```
+
+---
+
+### Step 6 — Add to `openclaw.json`
+
+Edit `~/.openclaw/openclaw.json` in two places:
+
+**a) Allow the tools** (inside the existing `"tools"` block):
+
+```json
+"tools": {
+  "web": { "...": "..." },
+  "allow": ["buy_virtual_card", "check_wallet_balance"]
+}
+```
+
+**b) Register the plugin** (inside the existing `"plugins"."entries"` block):
+
+```json
+"plugins": {
+  "entries": {
+    "clawpay": {
+      "enabled": true,
+      "config": {
+        "privateKey": "0x<your-wallet-private-key>",
+        "apiKey": "sk_clawpay_..."
+      }
+    }
+  }
+}
+```
+
+---
+
+### Step 7 — Restart the gateway
+
+```bash
+openclaw gateway restart
+```
+
+### Step 8 — Verify
+
+```bash
+openclaw plugins list            # clawpay should show "loaded"
+openclaw plugins info clawpay    # should show Tools: buy_virtual_card, check_wallet_balance
+```
+
+Your agent can now pay on any website the moment you say _"buy X for $Y"_.
+
+---
 
 ## Payment Flow (Technical)
 

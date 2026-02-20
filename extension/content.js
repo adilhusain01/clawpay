@@ -1,7 +1,7 @@
 console.log('ClawPay Extension: Content script loaded');
 
 // Use localhost for development, production URL for deployed version
-const DASHBOARD_URL = window.location.hostname === 'localhost' ? 'http://localhost:3001' : 'https://payclaw-omega.vercel.app';
+const DASHBOARD_URL = window.location.hostname === 'localhost' ? 'http://localhost:3001' : 'https://claw-pay.vercel.app';
 let cardDetails = null;
 let productDetails = null;
 

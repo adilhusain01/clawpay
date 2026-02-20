@@ -1,4 +1,4 @@
-# PayClaw
+# ClawPay
 
 The payment layer for your AI agent. Plug it in - Claw pays anywhere on the web, autonomously, without a card on file and without you touching anything.
 
@@ -8,9 +8,9 @@ Your agent can browse, decide, and act - but it can't pay. The only native optio
 
 Giving your agent a real debit card is worse: it has persistent access to your funds, and one bad checkout later your card number is compromised.
 
-## What PayClaw Is
+## What ClawPay Is
 
-PayClaw is the abstraction layer between your agent and the web's payment infrastructure:
+ClawPay is the abstraction layer between your agent and the web's payment infrastructure:
 
 - Your agent calls `buy_virtual_card()` with an amount
 - USDC is deposited into an on-chain escrow - nothing moves without your wallet signature
@@ -20,13 +20,13 @@ PayClaw is the abstraction layer between your agent and the web's payment infras
 
 **No merchant opt-in. No card on file. No human in the loop.**
 
-> x402 requires the website to support it. PayClaw works on every site that accepts Visa/Mastercard.
+> x402 requires the website to support it. ClawPay works on every site that accepts Visa/Mastercard.
 
 ## Why It's Secure
 
 - **On-demand, per-transaction cards** - a fresh card with an exact spend limit, every time. Your agent never holds a reusable number.
 - **Spend-capped** - even if the card leaks, it can only be charged once for that exact amount, then it's dead.
-- **You hold the crypto** - USDC stays in your wallet until you sign. PayClaw never custodies your funds.
+- **You hold the crypto** - USDC stays in your wallet until you sign. ClawPay never custodies your funds.
 - **No conversion** - you don't sell crypto for fiat. Escrow holds USDC, card issuance is triggered on-chain confirmation.
 
 ## How It Works
@@ -36,13 +36,13 @@ Your Agent (Claw / Claude / any MCP agent)
       │
       │  buy_virtual_card(amount_usd=25.00)
       ▼
-PayClaw MCP Server
+ClawPay MCP Server
       │  signs + submits USDC escrow tx
       ▼
-opBNB Testnet Escrow Contract
+Arbitrum Sepolia Escrow Contract
       │  on-chain confirmation
       ▼
-PayClaw Backend
+ClawPay Backend
       │  verifies tx, issues card
       ▼
 Lithic Single-Use Virtual Card
@@ -62,13 +62,13 @@ Agent checks out on any website - no human needed
                 │ MCP: buy_virtual_card()
                 ▼
 ┌──────────────────────────────────────┐
-│         PayClaw MCP Server           │
+│         ClawPay MCP Server           │
 │  Signs & submits USDC escrow tx      │
 └───────────────┬──────────────────────┘
                 │ POST /api/v1/payment/confirm
                 ▼
 ┌──────────────────────────────────────┐
-│         PayClaw Backend (FastAPI)    │
+│         ClawPay Backend (FastAPI)    │
 │  Verifies on-chain deposit           │
 │  Issues Lithic single-use card       │
 └───────────────┬──────────────────────┘
@@ -82,7 +82,7 @@ Agent checks out on any website - no human needed
 
 ## vs. x402
 
-| | x402 | PayClaw |
+| | x402 | ClawPay |
 |---|---|---|
 | Merchant opt-in required | Yes | No |
 | Card exposure risk | N/A | None - single-use, spend-capped |
@@ -94,32 +94,39 @@ Agent checks out on any website - no human needed
 
 | Layer | Technology |
 |---|---|
-| Blockchain | opBNB Testnet · USDC (ERC-20) |
-| Smart contract | Solidity escrow (`PayClawEscrow.sol`) |
+| Blockchain | Arbitrum Sepolia · USDC (ERC-20) |
+| Smart contract | Solidity escrow (`ClawPayEscrow.sol`) |
 | Card issuance | Lithic virtual cards (SINGLE_USE) |
 | Backend | Python / FastAPI |
 | Agent interface | MCP (FastMCP) |
 | Dashboard | React + Vite |
+
+## Deployed Contracts (Arbitrum Sepolia)
+
+| Contract | Address |
+|---|---|
+| MockUSDC | [`0xFCABF780284B0d5997914C5b1ab7Ac34F0F01eaE`](https://sepolia.arbiscan.io/address/0xFCABF780284B0d5997914C5b1ab7Ac34F0F01eaE) |
+| ClawPayEscrow | [`0x9ee0141d3FD09E4C15D183bD5017ef86e37b4254`](https://sepolia.arbiscan.io/address/0x9ee0141d3FD09E4C15D183bD5017ef86e37b4254) |
 
 ## Plug Into Your Agent
 
 The MCP server gives your agent two tools:
 
 - **`buy_virtual_card(amount_usd, merchant_name?)`** - deposits USDC, returns a single-use card
-- **`check_wallet_balance()`** - returns the agent wallet's USDC balance
+- **`check_wallet_balance()`** - returns the agent wallet's USDC and ETH balances
 
 Add to your Claude Desktop config (`~/.claude/claude_desktop_config.json`):
 
 ```json
 {
   "mcpServers": {
-    "payclaw": {
+    "clawpay": {
       "command": "python",
-      "args": ["/path/to/payclaw/mcp/server.py"],
+      "args": ["/path/to/clawpay/mcp/server.py"],
       "env": {
         "AGENT_PRIVATE_KEY": "0x...",
-        "PAYCLAW_API_URL": "https://payclaw-production-bad6.up.railway.app",
-        "PAYCLAW_API_KEY": "sk_payclaw_..."
+        "CLAWPAY_API_URL": "https://payclaw-production-bad6.up.railway.app",
+        "CLAWPAY_API_KEY": "sk_payclaw_..."
       }
     }
   }
@@ -131,7 +138,7 @@ Your agent now handles payments autonomously:
 ```
 "Buy me a Cadbury Dairy Milk from ChocoBazaar"
 
-# Claw calls PayClaw - no human steps:
+# Claw calls ClawPay - no human steps:
 #  ◆  deposits USDC into escrow on-chain
 #  ◆  receives a single-use virtual card
 #  ◆  checks out on the merchant site
@@ -143,9 +150,9 @@ Your agent now handles payments autonomously:
 ```mermaid
 sequenceDiagram
     participant Agent as Your Agent (Claw)
-    participant MCP as PayClaw MCP Server
-    participant Chain as opBNB Testnet
-    participant API as PayClaw Backend
+    participant MCP as ClawPay MCP Server
+    participant Chain as Arbitrum Sepolia
+    participant API as ClawPay Backend
     participant Lithic
 
     Agent->>MCP: buy_virtual_card(amount_usd=25.00)
@@ -179,9 +186,9 @@ Set in `backend/.env`:
 
 ```
 LITHIC_API_KEY=...
-USDC_CONTRACT_ADDRESS=0x...
-ESCROW_CONTRACT_ADDRESS=0x...
-PAYCLAW_API_KEY=sk_payclaw_...
+ARB_ESCROW_CONTRACT=0x9ee0141d3FD09E4C15D183bD5017ef86e37b4254
+USDC_CONTRACT=0xFCABF780284B0d5997914C5b1ab7Ac34F0F01eaE
+ARB_PLATFORM_PRIVATE_KEY=0x...
 ```
 
 ### MCP Server
@@ -189,7 +196,7 @@ PAYCLAW_API_KEY=sk_payclaw_...
 ```bash
 cd mcp
 pip install -r requirements.txt
-cp .env.example .env   # fill AGENT_PRIVATE_KEY + PAYCLAW_API_KEY
+cp .env.example .env   # fill AGENT_PRIVATE_KEY + CLAWPAY_API_KEY
 python server.py
 ```
 
@@ -205,8 +212,9 @@ Runs at `http://localhost:3001` - manual MetaMask flow for testing without an ag
 
 ```
 backend/      FastAPI server - payment sessions, card issuance
-contracts/    Solidity escrow (PayClawEscrow.sol) on opBNB Testnet
+contracts/    Solidity escrow (ClawPayEscrow.sol) on Arbitrum Sepolia
 dashboard/    React UI - manual payment + card display
+extension/    Browser extension - "Pay with ClawPay" button
 mcp/          MCP server - agent payment tools
 ```
 
@@ -216,7 +224,7 @@ mcp/          MCP server - agent payment tools
 
 ## Notes
 
-- opBNB Testnet - get free tBNB from the [opBNB faucet](https://www.bnbchain.org/en/testnet-faucet)
+- Arbitrum Sepolia - get free ETH from the [Arbitrum Sepolia faucet](https://faucet.triangleplatform.com/arbitrum/sepolia)
 - Lithic sandbox - no real money involved
 - Cards are SINGLE_USE and closed after first charge
 - 5% buffer on every card spend limit to cover taxes/fees; unused amount refunded as USDC

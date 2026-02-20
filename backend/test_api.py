@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Quick test script for the payclaw Backend API.
+Quick test script for the clawpay Backend API.
 Run this after starting the server with: uvicorn src.main:app --reload
 """
 import requests
@@ -8,7 +8,7 @@ import json
 import sys
 
 API_BASE = "http://localhost:8000"
-API_KEY = "sk_payclaw_dev_b03352ef1d68164c675023b82538ea3d1d1902f69bc408b7"
+API_KEY = "sk_clawpay_dev_b03352ef1d68164c675023b82538ea3d1d1902f69bc408b7"
 
 headers = {
     "X-API-Key": API_KEY,
@@ -84,7 +84,7 @@ def test_list_cards():
 
 if __name__ == "__main__":
     print("=" * 60)
-    print("payclaw Backend API Tests")
+    print("clawpay Backend API Tests")
     print("=" * 60)
     print()
 
@@ -92,8 +92,8 @@ if __name__ == "__main__":
         test_health()
         test_list_cards()
 
-        print("Note: Payment confirm will fail without a real opBNB tx hash.")
-        print("   Deploy the escrow contract and set BNB_ESCROW_CONTRACT in .env.")
+        print("Note: Payment confirm will fail without a real Arbitrum Sepolia tx hash.")
+        print("   Deploy the escrow contract and set ARB_ESCROW_CONTRACT in .env.")
         print()
         session_id = test_initiate_payment()
         if session_id:

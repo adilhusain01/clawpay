@@ -138,7 +138,7 @@ def cents_to_usdc(cents: int) -> int:
 
 class ArbitrumService:
     """
-    Handles Arbitrum Sepolia interactions for PayClaw.
+    Handles Arbitrum Sepolia interactions for ClawPay.
 
     Responsibilities:
     - Verify MockUSDC PaymentReceived events in transaction receipts

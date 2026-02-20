@@ -428,7 +428,7 @@ export default function Shop() {
 
         {/* Nav */}
         <nav className="sh-nav">
-          <button className="sh-back" onClick={() => navigate('/')}>← PayClaw</button>
+          <button className="sh-back" onClick={() => navigate('/')}>← ClawPay</button>
           <div className="sh-logo">Choco<em>Bazaar</em></div>
           <div className="sh-nav-links">
             <span>Chocolates</span>
@@ -507,7 +507,7 @@ export default function Shop() {
               {view === 'form' && (
                 <>
                   <div className="sh-modal-title">Secure Checkout</div>
-                  <div className="sh-modal-sub">ChocoBazaar · Powered by PayClaw</div>
+                  <div className="sh-modal-sub">ChocoBazaar · Powered by ClawPay</div>
 
                   <div className="sh-order-summary">
                     <div className="sh-order-emoji">🍫</div>

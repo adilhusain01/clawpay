@@ -1,7 +1,7 @@
 [project]
-name = "payclaw-backend"
+name = "clawpay-backend"
 version = "2.0.0"
-description = "Backend API for opBNB Testnet to Fiat Payment Bridge - Lithic Integration"
+description = "Backend API for Arbitrum Sepolia to Fiat Payment Bridge - Lithic Integration"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [

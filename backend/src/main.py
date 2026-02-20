@@ -1,5 +1,5 @@
 """
-PayClaw Backend API - Arbitrum Sepolia + Lithic virtual card bridge.
+ClawPay Backend API - Arbitrum Sepolia + Lithic virtual card bridge.
 
 Payment flow:
   1. POST /api/v1/payment/initiate  → returns session_id, contract address, USDC amount
@@ -152,7 +152,7 @@ class SimulateClearingResponse(BaseModel):
 # ─────────────────────────────────────────────
 
 app = FastAPI(
-    title="PayClaw API",
+    title="ClawPay API",
     description="Arbitrum Sepolia → Lithic virtual card bridge",
     version="2.0.0",
 )
@@ -174,7 +174,7 @@ if os.path.exists(static_path):
 def on_startup() -> None:
     SQLModel.metadata.create_all(engine)
     logger.info(
-        f"PayClaw started - chain: Arbitrum Sepolia ({settings.arb_chain_id}), "
+        f"ClawPay started - chain: Arbitrum Sepolia ({settings.arb_chain_id}), "
         f"escrow: {settings.arb_escrow_contract or 'NOT SET'}, "
         f"usdc: {settings.usdc_contract or 'NOT SET'}"
     )
@@ -188,7 +188,7 @@ def on_startup() -> None:
 @app.get("/", include_in_schema=False)
 def root():
     p = os.path.join(os.path.dirname(os.path.dirname(__file__)), "static", "index.html")
-    return FileResponse(p) if os.path.exists(p) else {"message": "PayClaw API", "docs": "/docs"}
+    return FileResponse(p) if os.path.exists(p) else {"message": "ClawPay API", "docs": "/docs"}
 
 
 @app.get("/health", tags=["Health"])
@@ -271,8 +271,8 @@ async def confirm_payment(
     Verify an on-chain deposit and issue a Lithic virtual card.
 
     1. Checks the tx_hash hasn't been used before (anti-replay).
-    2. Verifies the PaymentReceived event on opBNB matches the session_id.
-    3. Converts paid wei → USD at current BNB price.
+    2. Verifies the PaymentReceived event on Arbitrum Sepolia matches the session_id.
+    3. Converts paid USDC units → USD (1:1).
     4. Creates a Lithic SINGLE_USE card with a 5 % spend-limit buffer.
     5. Saves to DB and returns full card details.
     """
@@ -283,7 +283,7 @@ async def confirm_payment(
 
     # Verify on-chain
     try:
-        payment = bnb_service.verify_payment(
+        payment = arb_service.verify_payment(
             tx_hash=req.tx_hash,
             session_id=req.session_id,
         )
@@ -303,7 +303,7 @@ async def confirm_payment(
     # Create Lithic card
     try:
         card_data = lithic_service.create_virtual_card(
-            memo=f"PayClaw {req.session_id[:8]}",
+            memo=f"ClawPay {req.session_id[:8]}",
             spend_limit_cents=spend_limit_cents,
         )
     except Exception as exc:
@@ -569,7 +569,7 @@ async def _handle_settled(payload: Dict[str, Any], db: Session) -> Dict[str, Any
     On settlement:
     1. Find card in DB by Lithic card token.
     2. Calculate unused buffer (spend_limit − actual_charged).
-    3. Send tBNB refund via escrow contract if buffer > 0.
+    3. Send ETH (gas) refund via escrow contract if buffer > 0.
     """
     card_token = payload.get("card_token")
     actual_cents = payload.get("amount")
@@ -601,7 +601,7 @@ async def _handle_settled(payload: Dict[str, Any], db: Session) -> Dict[str, Any
         try:
             refund_usdc = cents_to_usdc(refund_cents)
 
-            result = bnb_service.send_refund(
+            result = arb_service.send_refund(
                 recipient=card.user_wallet_address,
                 usdc_amount=refund_usdc,
                 session_id=card.session_id or card.id,

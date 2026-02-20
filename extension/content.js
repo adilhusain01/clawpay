@@ -1,4 +1,4 @@
-console.log('PayClaw Extension: Content script loaded');
+console.log('ClawPay Extension: Content script loaded');
 
 // Use localhost for development, production URL for deployed version
 const DASHBOARD_URL = window.location.hostname === 'localhost' ? 'http://localhost:3001' : 'https://payclaw-omega.vercel.app';
@@ -23,7 +23,7 @@ function extractMerchantData() {
       url: window.location.href
     };
   } catch (error) {
-    console.error('PayClaw: Error extracting merchant data:', error);
+    console.error('ClawPay: Error extracting merchant data:', error);
     return {
       name: 'MERCHANT',
       domain: 'unknown.com',
@@ -54,7 +54,7 @@ function extractProductDetails() {
       const text = element.textContent.trim();
       if (text.length > 5 && text.length < 100) {
         details.productName = text;
-        console.log('PayClaw: Found product name from hotel-name class:', text);
+        console.log('ClawPay: Found product name from hotel-name class:', text);
         break;
       }
     }
@@ -86,7 +86,7 @@ function extractProductDetails() {
             heading.className.toLowerCase().includes('property') ||
             heading.className.toLowerCase().includes('name')) {
           details.productName = text;
-          console.log('PayClaw: Found product name from heading:', text);
+          console.log('ClawPay: Found product name from heading:', text);
           break;
         }
       }
@@ -99,7 +99,7 @@ function extractProductDetails() {
         const title = metaProperty.content.split('|')[0].trim();
         if (title.length > 5 && title.length < 100) {
           details.productName = title;
-          console.log('PayClaw: Found product name from meta:', title);
+          console.log('ClawPay: Found product name from meta:', title);
         }
       }
     }
@@ -107,7 +107,7 @@ function extractProductDetails() {
     // Extract main product image
     // First check for background images in elements (common in carousels)
     const elementsWithBg = document.querySelectorAll('[style*="background-image"], [class*="carousel" i], [class*="slider" i], [class*="hero" i]');
-    console.log('PayClaw: Found', elementsWithBg.length, 'elements with potential background images');
+    console.log('ClawPay: Found', elementsWithBg.length, 'elements with potential background images');
     
     for (const element of elementsWithBg) {
       const style = window.getComputedStyle(element);
@@ -118,7 +118,7 @@ function extractProductDetails() {
         const urlMatch = bgImage.match(/url\(['"]?(.*?)['"]?\)/);
         if (urlMatch && urlMatch[1]) {
           const imageUrl = urlMatch[1];
-          console.log('PayClaw: Found background image:', imageUrl.substring(0, 80));
+          console.log('ClawPay: Found background image:', imageUrl.substring(0, 80));
           
           // Check if it's a valid image URL
           if (!imageUrl.toLowerCase().includes('logo') && 
@@ -127,7 +127,7 @@ function extractProductDetails() {
               (imageUrl.includes('.jpg') || imageUrl.includes('.jpeg') || 
                imageUrl.includes('.png') || imageUrl.includes('.webp'))) {
             details.image = imageUrl;
-            console.log('PayClaw: ✅ Using background image:', imageUrl);
+            console.log('ClawPay: ✅ Using background image:', imageUrl);
             break;
           }
         }
@@ -137,7 +137,7 @@ function extractProductDetails() {
     // If no background image found, check regular img tags
     if (!details.image) {
       const images = document.querySelectorAll('img[src]');
-      console.log('PayClaw: Found', images.length, 'images on page');
+      console.log('ClawPay: Found', images.length, 'images on page');
       
       for (const img of images) {
         // Convert relative URLs to absolute
@@ -146,7 +146,7 @@ function extractProductDetails() {
         const width = img.naturalWidth || img.width || 0;
         const height = img.naturalHeight || img.height || 0;
         
-        console.log('PayClaw: Checking image:', {
+        console.log('ClawPay: Checking image:', {
           src: src.substring(0, 80),
           alt,
           width,
@@ -167,14 +167,14 @@ function extractProductDetails() {
              img.className.toLowerCase().includes('main') ||
              width > 400)) {
           details.image = src;
-          console.log('PayClaw: ✅ Found product image:', src, 'dimensions:', width, 'x', height);
+          console.log('ClawPay: ✅ Found product image:', src, 'dimensions:', width, 'x', height);
           break;
         }
       }
       
       // If no specific image found, try to get the largest image on page
       if (!details.image) {
-        console.log('PayClaw: No specific image found, looking for largest...');
+        console.log('ClawPay: No specific image found, looking for largest...');
         let largestImage = null;
         let maxSize = 0;
         
@@ -190,15 +190,15 @@ function extractProductDetails() {
               !src.toLowerCase().includes('sprite')) {
             maxSize = size;
             largestImage = src;
-            console.log('PayClaw: New largest candidate:', src, 'size:', width, 'x', height);
+            console.log('ClawPay: New largest candidate:', src, 'size:', width, 'x', height);
           }
         }
         
         if (largestImage) {
           details.image = largestImage;
-          console.log('PayClaw: ✅ Using largest image:', largestImage);
+          console.log('ClawPay: ✅ Using largest image:', largestImage);
         } else {
-          console.log('PayClaw: ❌ No suitable image found');
+          console.log('ClawPay: ❌ No suitable image found');
         }
       }
     }
@@ -258,10 +258,10 @@ function extractProductDetails() {
       details.duration = durationMatch[1];
     }
     
-    console.log('PayClaw: Extracted product details:', details);
+    console.log('ClawPay: Extracted product details:', details);
     return details;
   } catch (error) {
-    console.error('PayClaw: Error extracting product details:', error);
+    console.error('ClawPay: Error extracting product details:', error);
     return null;
   }
 }
@@ -305,7 +305,7 @@ function extractTotalAmount() {
   try {
     const allText = document.body.innerText;
     
-    console.log('=== PAYCLAW DEBUG: Starting amount extraction ===');
+    console.log('=== CLAWPAY DEBUG: Starting amount extraction ===');
     console.log('Page text length:', allText.length);
     console.log('Text snippet around "Total":', allText.substring(allText.toLowerCase().indexOf('total') - 50, allText.toLowerCase().indexOf('total') + 200));
     
@@ -441,7 +441,7 @@ function extractTotalAmount() {
     console.log('=== NO AMOUNT FOUND ===');
     return null;
   } catch (error) {
-    console.error('PayClaw: Error extracting amount:', error);
+    console.error('ClawPay: Error extracting amount:', error);
     return null;
   }
 }
@@ -460,14 +460,14 @@ async function convertToUSD(amount, fromCurrency) {
     if (data.result === 'success' && data.rates && data.rates.USD) {
       const usdRate = data.rates.USD;
       const convertedAmount = amount * usdRate;
-      console.log(`PayClaw: Converted ${amount} ${fromCurrency} to ${convertedAmount.toFixed(2)} USD`);
+      console.log(`ClawPay: Converted ${amount} ${fromCurrency} to ${convertedAmount.toFixed(2)} USD`);
       return parseFloat(convertedAmount.toFixed(2));
     }
     
-    console.warn('PayClaw: Currency conversion failed, using original amount');
+    console.warn('ClawPay: Currency conversion failed, using original amount');
     return amount;
   } catch (error) {
-    console.error('PayClaw: Currency conversion error:', error);
+    console.error('ClawPay: Currency conversion error:', error);
     return amount;
   }
 }
@@ -501,17 +501,17 @@ function isCheckoutPage() {
 // Function to create and show the "Pay with Crypto" button
 function createPayButton() {
   // Check if button already exists
-  if (document.getElementById('payclaw-pay-button')) return;
+  if (document.getElementById('clawpay-pay-button')) return;
   
   const button = document.createElement('button');
-  button.id = 'payclaw-pay-button';
+  button.id = 'clawpay-pay-button';
   button.innerHTML = `
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="margin-right: 8px;">
       <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
       <path d="M2 17L12 22L22 17" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
       <path d="M2 12L12 17L22 12" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>
-    Pay with PayClaw
+    Pay with ClawPay
   `;
   
   button.style.cssText = `
@@ -559,8 +559,8 @@ async function handlePayWithCrypto() {
   const merchant = extractMerchantData();
   productDetails = extractProductDetails();
   
-  console.log('PayClaw: Extracted amount data:', amountData);
-  console.log('PayClaw: Extracted product details:', productDetails);
+  console.log('ClawPay: Extracted amount data:', amountData);
+  console.log('ClawPay: Extracted product details:', productDetails);
   
   if (!amountData) {
     openDashboard(null, null, merchant);
@@ -573,7 +573,7 @@ async function handlePayWithCrypto() {
   // Convert to USD
   const usdAmount = await convertToUSD(amountData.amount, amountData.currency);
   
-  console.log(`PayClaw: Converted to USD: $${usdAmount}`);
+  console.log(`ClawPay: Converted to USD: $${usdAmount}`);
   
   openDashboard(usdAmount, amountData, merchant);
 }
@@ -592,7 +592,7 @@ function openDashboard(usdAmount, originalAmount, merchant) {
   params.set('domain', merchant.domain);
   
   const dashboardUrl = `${DASHBOARD_URL}?${params.toString()}`;
-  dashboardWindow = window.open(dashboardUrl, 'payclaw-dashboard', 'width=500,height=700');
+  dashboardWindow = window.open(dashboardUrl, 'clawpay-dashboard', 'width=500,height=700');
   
   // Listen for card details from dashboard
   window.addEventListener('message', handleDashboardMessage);
@@ -600,8 +600,8 @@ function openDashboard(usdAmount, originalAmount, merchant) {
 
 // Function to auto-fill card details using native setters and events
 function autoFillCardDetails(card) {
-  console.log('PayClaw: Starting autofill with card:', card);
-  console.log('PayClaw: Card properties:', {
+  console.log('ClawPay: Starting autofill with card:', card);
+  console.log('ClawPay: Card properties:', {
     number: card.number,
     pan: card.pan,
     cardNumber: card.cardNumber,
@@ -637,10 +637,10 @@ function autoFillCardDetails(card) {
       // Also dispatch blur for some forms
       element.dispatchEvent(new Event('blur', { bubbles: true }));
       
-      console.log(`PayClaw: Filled ${element.name || element.id || 'field'} with value`);
+      console.log(`ClawPay: Filled ${element.name || element.id || 'field'} with value`);
       return true;
     } catch (error) {
-      console.error('PayClaw: Error setting input value:', error);
+      console.error('ClawPay: Error setting input value:', error);
       return false;
     }
   }
@@ -666,7 +666,7 @@ function autoFillCardDetails(card) {
   for (const selector of cardNumberSelectors) {
     cardNumberField = document.querySelector(selector);
     if (cardNumberField) {
-      console.log('PayClaw: Found card number field:', selector);
+      console.log('ClawPay: Found card number field:', selector);
       break;
     }
   }
@@ -674,7 +674,7 @@ function autoFillCardDetails(card) {
   if (cardNumberField && card.pan) {
     setInputValue(cardNumberField, card.pan);
   } else {
-    console.warn('PayClaw: Card number field not found or card.pan missing');
+    console.warn('ClawPay: Card number field not found or card.pan missing');
   }
   
   // Find expiry field(s)
@@ -693,7 +693,7 @@ function autoFillCardDetails(card) {
   for (const selector of expirySelectors) {
     expiryField = document.querySelector(selector);
     if (expiryField) {
-      console.log('PayClaw: Found expiry field:', selector);
+      console.log('ClawPay: Found expiry field:', selector);
       break;
     }
   }
@@ -703,22 +703,22 @@ function autoFillCardDetails(card) {
   const yearField = document.querySelector('input[name*="year" i], select[name*="year" i], input[placeholder="YY"], input[aria-label*="year" i]');
   
   if (monthField && yearField && card.exp_month && card.exp_year) {
-    console.log('PayClaw: Found separate month/year fields');
+    console.log('ClawPay: Found separate month/year fields');
     // Separate fields
     const monthValue = card.exp_month.toString().padStart(2, '0');
     const yearValue = card.exp_year.toString().slice(-2); // Last 2 digits (2032 -> 32)
     
-    console.log('PayClaw: Filling month:', monthValue, 'year:', yearValue);
+    console.log('ClawPay: Filling month:', monthValue, 'year:', yearValue);
     setInputValue(monthField, monthValue);
     setInputValue(yearField, yearValue);
   } else if (expiryField && card.exp_month && card.exp_year) {
     // Single combined field (MM/YY format)
-    console.log('PayClaw: Found combined expiry field');
+    console.log('ClawPay: Found combined expiry field');
     const expiry = `${card.exp_month.toString().padStart(2, '0')}/${card.exp_year.toString().slice(-2)}`;
-    console.log('PayClaw: Filling expiry:', expiry);
+    console.log('ClawPay: Filling expiry:', expiry);
     setInputValue(expiryField, expiry);
   } else {
-    console.warn('PayClaw: Expiry field(s) not found or missing data');
+    console.warn('ClawPay: Expiry field(s) not found or missing data');
   }
   
   // Find CVV/CVC field
@@ -738,7 +738,7 @@ function autoFillCardDetails(card) {
   for (const selector of cvvSelectors) {
     cvvField = document.querySelector(selector);
     if (cvvField) {
-      console.log('PayClaw: Found CVV field:', selector);
+      console.log('ClawPay: Found CVV field:', selector);
       break;
     }
   }
@@ -746,7 +746,7 @@ function autoFillCardDetails(card) {
   if (cvvField && card.cvv) {
     setInputValue(cvvField, card.cvv);
   } else {
-    console.warn('PayClaw: CVV field not found');
+    console.warn('ClawPay: CVV field not found');
   }
   
   // Find cardholder name field (optional)
@@ -765,7 +765,7 @@ function autoFillCardDetails(card) {
   for (const selector of nameSelectors) {
     nameField = document.querySelector(selector);
     if (nameField) {
-      console.log('PayClaw: Found name field:', selector);
+      console.log('ClawPay: Found name field:', selector);
       break;
     }
   }
@@ -774,7 +774,7 @@ function autoFillCardDetails(card) {
     setInputValue(nameField, card.cardholder_name);
   }
   
-  console.log('PayClaw: Autofill completed');
+  console.log('ClawPay: Autofill completed');
   showNotification('Card details filled automatically!', 'success');
   
   // Show confirm transaction button after autofill
@@ -784,10 +784,10 @@ function autoFillCardDetails(card) {
 // Function to show confirm transaction button
 function showConfirmTransactionButton() {
   // Check if button already exists
-  if (document.getElementById('payclaw-confirm-button')) return;
+  if (document.getElementById('clawpay-confirm-button')) return;
   
   const button = document.createElement('button');
-  button.id = 'payclaw-confirm-button';
+  button.id = 'clawpay-confirm-button';
   button.innerHTML = `
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="margin-right: 8px;">
       <path d="M9 11L12 14L22 4" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -814,13 +814,13 @@ function showConfirmTransactionButton() {
     display: flex;
     align-items: center;
     transition: all 0.3s ease;
-    animation: payclaw-slide-in 0.3s ease-out;
+    animation: clawpay-slide-in 0.3s ease-out;
   `;
   
   // Add slide-in animation
   const style = document.createElement('style');
   style.textContent = `
-    @keyframes payclaw-slide-in {
+    @keyframes clawpay-slide-in {
       from {
         transform: translateY(100px);
         opacity: 0;
@@ -847,8 +847,8 @@ function showConfirmTransactionButton() {
   
   button.addEventListener('click', handleConfirmTransaction);
   
-  // Hide the "Pay with PayClaw" button if it exists
-  const payButton = document.getElementById('payclaw-pay-button');
+  // Hide the "Pay with ClawPay" button if it exists
+  const payButton = document.getElementById('clawpay-pay-button');
   if (payButton) {
     payButton.style.display = 'none';
   }
@@ -863,7 +863,7 @@ let dashboardWindow = null;
 
 // Handle confirm transaction button click
 async function handleConfirmTransaction() {
-  const button = document.getElementById('payclaw-confirm-button');
+  const button = document.getElementById('clawpay-confirm-button');
   if (!button) return;
   
   if (!cardDetails) {
@@ -883,7 +883,7 @@ async function handleConfirmTransaction() {
       border-top: 3px solid white;
       border-radius: 50%;
       margin-right: 8px;
-      animation: payclaw-spin 1s linear infinite;
+      animation: clawpay-spin 1s linear infinite;
     "></div>
     Processing...
   `;
@@ -893,22 +893,22 @@ async function handleConfirmTransaction() {
   
   // Send message to dashboard window to trigger payment
   const message = {
-    type: 'PAYCLAW_CONFIRM_TRANSACTION',
+    type: 'CLAWPAY_CONFIRM_TRANSACTION',
     timestamp: Date.now()
   };
   
-  console.log('PayClaw: Sending confirm transaction message to dashboard');
+  console.log('ClawPay: Sending confirm transaction message to dashboard');
   
   // Send to dashboard window if available
   if (dashboardWindow && !dashboardWindow.closed) {
-    console.log('PayClaw: Sending to stored dashboard window');
+    console.log('ClawPay: Sending to stored dashboard window');
     dashboardWindow.postMessage(message, DASHBOARD_URL);
   } else {
-    console.warn('PayClaw: Dashboard window not available');
+    console.warn('ClawPay: Dashboard window not available');
     // Try to find dashboard by opening it
     const params = new URLSearchParams();
     params.set('autoPayment', 'true');
-    dashboardWindow = window.open(`${DASHBOARD_URL}?${params.toString()}`, 'payclaw-dashboard');
+    dashboardWindow = window.open(`${DASHBOARD_URL}?${params.toString()}`, 'clawpay-dashboard');
     
     if (dashboardWindow) {
       // Wait for dashboard to load, then send message
@@ -918,22 +918,22 @@ async function handleConfirmTransaction() {
     }
   }
   
-  console.log('PayClaw: Confirm transaction message sent');
+  console.log('ClawPay: Confirm transaction message sent');
 }
 
 // Handle messages from dashboard
 function handleDashboardMessage(event) {
   // Verify origin (allow localhost on any port for dev)
   if (!event.origin.includes('localhost')) {
-    console.log('PayClaw: Ignoring message from:', event.origin);
+    console.log('ClawPay: Ignoring message from:', event.origin);
     return;
   }
   
-  console.log('PayClaw: Message received:', event.data);
+  console.log('ClawPay: Message received:', event.data);
   
-  if (event.data.type === 'PAYCLAW_CARD_READY') {
+  if (event.data.type === 'CLAWPAY_CARD_READY') {
     cardDetails = event.data.card;
-    console.log('PayClaw: Card created successfully');
+    console.log('ClawPay: Card created successfully');
     
     // Auto-fill card details
     setTimeout(() => {
@@ -943,14 +943,14 @@ function handleDashboardMessage(event) {
     }, 500);
   }
   
-  if (event.data.type === 'PAYCLAW_PAYMENT_COMPLETE') {
+  if (event.data.type === 'CLAWPAY_PAYMENT_COMPLETE') {
     // Show confirmation overlay on merchant page
     hideLoadingModal();
     showConfirmationModal(event.data.paymentDetails, productDetails);
-    console.log('PayClaw: Payment completed successfully');
+    console.log('ClawPay: Payment completed successfully');
     
     // Remove confirm button after payment
-    const confirmButton = document.getElementById('payclaw-confirm-button');
+    const confirmButton = document.getElementById('clawpay-confirm-button');
     if (confirmButton) {
       confirmButton.remove();
     }
@@ -958,11 +958,11 @@ function handleDashboardMessage(event) {
 }
 
 // Function to show loading modal
-function showLoadingModal(message = 'tBNB payment in progress') {
+function showLoadingModal(message = 'ETH payment in progress') {
   if (!document.body) return null;
   
   const modal = document.createElement('div');
-  modal.id = 'payclaw-loading-modal';
+  modal.id = 'clawpay-loading-modal';
   modal.style.cssText = `
     position: fixed;
     top: 0;
@@ -995,7 +995,7 @@ function showLoadingModal(message = 'tBNB payment in progress') {
     border-top: 4px solid black;
     border-radius: 50%;
     margin: 0 auto 20px;
-    animation: payclaw-spin 1s linear infinite;
+    animation: clawpay-spin 1s linear infinite;
   `;
   
   const text = document.createElement('div');
@@ -1017,7 +1017,7 @@ function showLoadingModal(message = 'tBNB payment in progress') {
   // Add spinner animation
   const style = document.createElement('style');
   style.textContent = `
-    @keyframes payclaw-spin {
+    @keyframes clawpay-spin {
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
@@ -1035,7 +1035,7 @@ function showLoadingModal(message = 'tBNB payment in progress') {
 
 // Function to hide loading modal
 function hideLoadingModal() {
-  const modal = document.getElementById('payclaw-loading-modal');
+  const modal = document.getElementById('clawpay-loading-modal');
   if (modal && modal.parentNode) {
     modal.remove();
   }
@@ -1046,7 +1046,7 @@ function showConfirmationModal(paymentDetails, productDetails) {
   if (!document.body) return;
 
   const modal = document.createElement('div');
-  modal.id = 'payclaw-confirmation-modal';
+  modal.id = 'clawpay-confirmation-modal';
   modal.style.cssText = `
     position: fixed;
     top: 0;
@@ -1181,7 +1181,7 @@ function showConfirmationModal(paymentDetails, productDetails) {
       </div>
       <div style="display: flex; justify-content: space-between; padding: 15px 0; border-bottom: 1px dotted #e5e5e5;">
         <span style="font-weight: 600;">Payment Method</span>
-        <span>tBNB on opBNB (Virtual Card)</span>
+        <span>ETH on Arbitrum Sepolia (Virtual Card)</span>
       </div>
       ${paymentDetails.originalAmount ? `
       <div style="display: flex; justify-content: space-between; padding: 15px 0; border-bottom: 1px dotted #e5e5e5;">
@@ -1196,7 +1196,7 @@ function showConfirmationModal(paymentDetails, productDetails) {
     </div>
 
     <div style="margin-top: 30px; text-align: center;">
-      <button id="payclaw-close-confirmation" style="
+      <button id="clawpay-close-confirmation" style="
         padding: 12px 32px;
         background: black;
         color: white;
@@ -1214,7 +1214,7 @@ function showConfirmationModal(paymentDetails, productDetails) {
   document.body.appendChild(modal);
 
   // Close button handler
-  document.getElementById('payclaw-close-confirmation').addEventListener('click', () => {
+  document.getElementById('clawpay-close-confirmation').addEventListener('click', () => {
     modal.remove();
   });
 
@@ -1260,7 +1260,7 @@ function showNotification(message, type = 'info') {
 // Initialize extension
 function init() {
   if (isCheckoutPage()) {
-    console.log('PayClaw: Checkout page detected');
+    console.log('ClawPay: Checkout page detected');
     setTimeout(() => {
       createPayButton();
     }, 1000);
@@ -1274,4 +1274,4 @@ if (document.readyState === 'loading') {
   init();
 }
 
-console.log('PayClaw: Extension ready');
+console.log('ClawPay: Extension ready');

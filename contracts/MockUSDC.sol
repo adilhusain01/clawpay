@@ -3,18 +3,18 @@ pragma solidity ^0.8.20;
 
 /**
  * @title MockUSDC
- * @notice Test ERC-20 token mimicking USDC on opBNB Testnet.
+ * @notice Test ERC-20 token mimicking USDC on Arbitrum Sepolia.
  *
  *   - Symbol  : USDC
  *   - Decimals: 6  (1 USDC = 1_000_000 units, same as real USDC)
  *   - Minting : owner-only (call mint() to fund agent wallets)
  *
- * Deploy this first, then pass its address to PayClawEscrow's constructor.
+ * Deploy this first, then pass its address to ClawPayEscrow's constructor.
  *
- * opBNB Testnet:
- *   ChainID : 5611 (0x15eb)
- *   RPC     : https://opbnb-testnet-rpc.bnbchain.org
- *   Explorer: https://testnet.opbnbscan.com
+ * Arbitrum Sepolia:
+ *   ChainID : 421614 (0x66eee2)
+ *   RPC     : https://arbitrum-sepolia-testnet.api.pocket.network
+ *   Explorer: https://sepolia.arbiscan.io
  */
 contract MockUSDC {
     string public constant name     = "Mock USD Coin";

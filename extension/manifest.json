@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "PayClaw",
+  "name": "ClawPay",
   "version": "1.0.8",
-  "description": "Pay at any checkout using tBNB on opBNB - automatic currency conversion",
+  "description": "Pay at any checkout using ETH on Arbitrum Sepolia - automatic currency conversion",
   "permissions": [
     "activeTab",
     "scripting"

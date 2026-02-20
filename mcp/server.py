@@ -1,12 +1,12 @@
 """
-PayClaw MCP Server - buy virtual cards with MockUSDC on Arbitrum Sepolia.
+ClawPay MCP Server - buy virtual cards with MockUSDC on Arbitrum Sepolia.
 
 Exposes two tools:
     buy_virtual_card(amount_usd, merchant_name?) → card details
     check_wallet_balance()                       → USDC + ETH balances
 
 The server holds the agent's EVM private key and autonomously:
-  1. Calls the PayClaw backend to initiate a payment session.
+  1. Calls the ClawPay backend to initiate a payment session.
   2. Approves MockUSDC spending on the escrow contract.
   3. Calls escrow.deposit(sessionId, amount) to lock funds.
   4. Calls the backend confirm endpoint to get the Lithic virtual card.
@@ -19,13 +19,13 @@ Setup:
 Claude Desktop config (~/.claude/claude_desktop_config.json):
   {
     "mcpServers": {
-      "payclaw": {
+      "clawpay": {
         "command": "python",
-        "args": ["/path/to/payclaw/mcp/server.py"],
+        "args": ["/path/to/clawpay/mcp/server.py"],
         "env": {
           "AGENT_PRIVATE_KEY":     "0x...",
-          "PAYCLAW_API_URL":       "https://payclaw-production-bad6.up.railway.app",
-          "PAYCLAW_API_KEY":       "sk_payclaw_...",
+          "CLAWPAY_API_URL":       "https://clawpay-production-bad6.up.railway.app",
+          "CLAWPAY_API_KEY":       "sk_clawpay_...",
           "USDC_CONTRACT_ADDRESS": "0x..."
         }
       }
@@ -46,10 +46,10 @@ from web3 import Web3
 # ─────────────────────────────────────────────
 
 AGENT_PRIVATE_KEY     = os.environ.get("AGENT_PRIVATE_KEY", "")
-PAYCLAW_API_URL       = os.environ.get("PAYCLAW_API_URL", "https://payclaw-production-bad6.up.railway.app")
-PAYCLAW_API_KEY       = os.environ.get("PAYCLAW_API_KEY", "")
-OPBNB_RPC             = os.environ.get("OPBNB_RPC", "https://opbnb-testnet-rpc.bnbchain.org")
-CHAIN_ID              = int(os.environ.get("CHAIN_ID", "5611"))
+CLAWPAY_API_URL       = os.environ.get("CLAWPAY_API_URL", "https://clawpay-production-bad6.up.railway.app")
+CLAWPAY_API_KEY       = os.environ.get("CLAWPAY_API_KEY", "")
+ARB_RPC               = os.environ.get("ARB_RPC", "https://arbitrum-sepolia-testnet.api.pocket.network")
+CHAIN_ID              = int(os.environ.get("CHAIN_ID", "421614"))
 USDC_CONTRACT_ADDRESS = os.environ.get("USDC_CONTRACT_ADDRESS", "")
 
 # ─────────────────────────────────────────────
@@ -94,7 +94,7 @@ ERC20_ABI = [
 # ─────────────────────────────────────────────
 
 def _build_w3() -> Web3:
-    w3 = Web3(Web3.HTTPProvider(OPBNB_RPC))
+    w3 = Web3(Web3.HTTPProvider(ARB_RPC))
     try:
         from web3.middleware import ExtraDataToPOAMiddleware
         w3.middleware_onion.inject(ExtraDataToPOAMiddleware, layer=0)
@@ -108,16 +108,16 @@ w3 = _build_w3()
 
 if AGENT_PRIVATE_KEY:
     agent_account = w3.eth.account.from_key(AGENT_PRIVATE_KEY)
-    print(f"[payclaw-mcp] Agent wallet: {agent_account.address}")
+    print(f"[clawpay-mcp] Agent wallet: {agent_account.address}")
 else:
     agent_account = None
-    print("[payclaw-mcp] WARNING: AGENT_PRIVATE_KEY not set - transactions will fail")
+    print("[clawpay-mcp] WARNING: AGENT_PRIVATE_KEY not set - transactions will fail")
 
 # ─────────────────────────────────────────────
 # MCP server
 # ─────────────────────────────────────────────
 
-mcp = FastMCP("payclaw")
+mcp = FastMCP("clawpay")
 
 
 async def _wait_for_receipt(tx_hash_bytes, retries: int = 30, delay: float = 2.0) -> dict:
@@ -139,7 +139,7 @@ async def buy_virtual_card(
     merchant_name: Optional[str] = None,
 ) -> dict:
     """
-    Purchase a Lithic virtual card by paying MockUSDC on opBNB Testnet.
+    Purchase a Lithic virtual card by paying MockUSDC on Arbitrum Sepolia.
 
     The card is single-use. Any unused spend-limit buffer is automatically
     refunded as MockUSDC to the agent wallet after the merchant settles.
@@ -170,10 +170,10 @@ async def buy_virtual_card(
 
     headers = {
         "Content-Type": "application/json",
-        "X-API-Key": PAYCLAW_API_KEY,
+        "X-API-Key": CLAWPAY_API_KEY,
     }
 
-    async with httpx.AsyncClient(timeout=30.0, base_url=PAYCLAW_API_URL) as client:
+    async with httpx.AsyncClient(timeout=30.0, base_url=CLAWPAY_API_URL) as client:
 
         # ── Step 1: Initiate session ────────────────────────────────────
         init_payload = {
@@ -192,7 +192,7 @@ async def buy_virtual_card(
         usdc_amount      = int(session["usdc_amount"])
 
         print(
-            f"[payclaw-mcp] Session {session_id}: "
+            f"[clawpay-mcp] Session {session_id}: "
             f"${amount_usd} → {session['usdc_amount_display']}"
         )
 
@@ -221,13 +221,13 @@ async def buy_virtual_card(
 
         signed_approve = agent_account.sign_transaction(approve_tx)
         approve_hash = w3.eth.send_raw_transaction(signed_approve.raw_transaction)
-        print(f"[payclaw-mcp] Approve TX: {approve_hash.hex()}")
+        print(f"[clawpay-mcp] Approve TX: {approve_hash.hex()}")
 
         approve_receipt = await _wait_for_receipt(approve_hash)
         if approve_receipt["status"] != 1:
             return {"error": f"USDC approval reverted: {approve_hash.hex()}"}
 
-        print(f"[payclaw-mcp] Approval confirmed in block {approve_receipt['blockNumber']}")
+        print(f"[clawpay-mcp] Approval confirmed in block {approve_receipt['blockNumber']}")
 
         # ── Step 3: Deposit MockUSDC to escrow ──────────────────────────
         nonce = w3.eth.get_transaction_count(agent_account.address)
@@ -245,13 +245,13 @@ async def buy_virtual_card(
         signed_deposit = agent_account.sign_transaction(deposit_tx)
         deposit_hash = w3.eth.send_raw_transaction(signed_deposit.raw_transaction)
         tx_hash = deposit_hash.hex()
-        print(f"[payclaw-mcp] Deposit TX: {tx_hash}")
+        print(f"[clawpay-mcp] Deposit TX: {tx_hash}")
 
         deposit_receipt = await _wait_for_receipt(deposit_hash)
         if deposit_receipt["status"] != 1:
             return {"error": f"Deposit reverted: {tx_hash}"}
 
-        print(f"[payclaw-mcp] Deposit confirmed in block {deposit_receipt['blockNumber']}")
+        print(f"[clawpay-mcp] Deposit confirmed in block {deposit_receipt['blockNumber']}")
 
         # ── Step 4: Confirm with backend → get card ─────────────────────
         confirm_payload = {
@@ -268,7 +268,7 @@ async def buy_virtual_card(
         result = confirm_resp.json()
         card   = result["card"]
 
-        print(f"[payclaw-mcp] Card issued: ...{card.get('last_four')}")
+        print(f"[clawpay-mcp] Card issued: ...{card.get('last_four')}")
 
         return {
             "pan":        card.get("pan"),
@@ -287,15 +287,15 @@ async def buy_virtual_card(
 @mcp.tool()
 async def check_wallet_balance() -> dict:
     """
-    Return the agent wallet's MockUSDC and tBNB (gas) balances on opBNB Testnet.
+    Return the agent wallet's MockUSDC and ETH (gas) balances on Arbitrum Sepolia.
 
     Returns:
         {
           "address":      "0x...",
           "usdc_balance": 100.50,
           "usdc_units":   100500000,
-          "bnb_balance":  0.01,
-          "network":      "opBNB Testnet"
+          "eth_balance":  0.01,
+          "network":      "Arbitrum Sepolia"
         }
     """
     if not agent_account:
@@ -305,8 +305,8 @@ async def check_wallet_balance() -> dict:
 
     result = {
         "address":     agent_account.address,
-        "bnb_balance": float(w3.from_wei(bnb_wei, "ether")),
-        "network":     "opBNB Testnet",
+        "eth_balance": float(w3.from_wei(bnb_wei, "ether")),
+        "network":     "Arbitrum Sepolia",
         "chain_id":    CHAIN_ID,
     }
 

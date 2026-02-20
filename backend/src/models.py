@@ -15,10 +15,10 @@ class VirtualCard(SQLModel, table=True):
     """
     Represents a virtual card created via Lithic.
 
-    Links an opBNB transaction to a Lithic virtual card,
+    Links an Arbitrum Sepolia transaction to a Lithic virtual card,
     tracking the full lifecycle from creation to clearing and refund.
 
-    NOTE: If migrating from the old schema, delete payclaw.db
+    NOTE: If migrating from the old schema, delete clawpay.db
     and let the app recreate it on startup.
     """
 
@@ -31,10 +31,10 @@ class VirtualCard(SQLModel, table=True):
         index=True,
     )
 
-    # On-chain tracking (opBNB)
+    # On-chain tracking (Arbitrum Sepolia)
     tx_hash: str = Field(
         index=True,
-        description="opBNB transaction hash of the deposit",
+        description="Arbitrum Sepolia transaction hash of the deposit",
     )
     user_wallet_address: Optional[str] = Field(
         default=None,
@@ -90,7 +90,7 @@ class VirtualCard(SQLModel, table=True):
     refund_amount_cents: Optional[int] = Field(default=None)
     refund_tx: Optional[str] = Field(
         default=None,
-        description="opBNB tx hash of the MockUSDC refund sent to the user",
+        description="Arbitrum Sepolia tx hash of the MockUSDC refund sent to the user",
     )
     refunded_at: Optional[datetime] = Field(default=None)
 

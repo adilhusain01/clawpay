@@ -89,7 +89,7 @@ function App() {
   // Listen for confirm-transaction message from extension
   useEffect(() => {
     const handler = (event) => {
-      if (event.data?.type === 'PAYCLAW_CONFIRM_TRANSACTION' && card && !testingPayment) {
+      if (event.data?.type === 'CLAWPAY_CONFIRM_TRANSACTION' && card && !testingPayment) {
         handleTestPayment()
       }
     }
@@ -116,18 +116,18 @@ function App() {
       const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' })
       const userAccount = accounts[0]
 
-      // Switch (or add) opBNB Testnet
+      // Switch (or add) Arbitrum Sepolia
       try {
         await window.ethereum.request({
           method: 'wallet_switchEthereumChain',
-          params: [{ chainId: OPBNB_TESTNET.chainId }],
+          params: [{ chainId: ARBITRUM_SEPOLIA.chainId }],
         })
       } catch (switchErr) {
         if (switchErr.code === 4902) {
           // Network not in MetaMask - add it
           await window.ethereum.request({
             method: 'wallet_addEthereumChain',
-            params: [OPBNB_TESTNET],
+            params: [ARBITRUM_SEPOLIA],
           })
         } else {
           throw switchErr
@@ -167,7 +167,7 @@ function App() {
         body: JSON.stringify({
           amount_usd: parseFloat(amount),
           user_wallet_address: account,
-          merchant_name: merchantName || 'PayClaw Merchant',
+          merchant_name: merchantName || 'ClawPay Merchant',
         }),
       })
 
@@ -240,7 +240,7 @@ function App() {
 
         // Notify parent window (merchant page)
         if (window.opener) {
-          window.opener.postMessage({ type: 'PAYCLAW_CARD_READY', card: cardData }, '*')
+          window.opener.postMessage({ type: 'CLAWPAY_CARD_READY', card: cardData }, '*')
         }
       } else {
         throw new Error('Card not returned from backend')
@@ -285,7 +285,7 @@ function App() {
       setTimeout(() => {
         if (window.opener) {
           window.opener.postMessage({
-            type: 'PAYCLAW_PAYMENT_COMPLETE',
+            type: 'CLAWPAY_PAYMENT_COMPLETE',
             paymentDetails: {
               amount,
               merchant: merchantName || 'Merchant',
@@ -333,8 +333,8 @@ function App() {
       <div className="container">
       <div className="card">
         <div className="header">
-          <h1>PayClaw</h1>
-          <p className="subtitle">Pay with USDC · opBNB Testnet</p>
+          <h1>ClawPay</h1>
+          <p className="subtitle">Pay with USDC · Arbitrum Sepolia</p>
         </div>
 
         {error && <div className="error-banner">{error}</div>}
@@ -342,7 +342,7 @@ function App() {
         {!walletConnected ? (
           <div className="connect-section">
             <p className="info-text">
-              Connect MetaMask to pay with USDC on opBNB Testnet.<br />
+              Connect MetaMask to pay with USDC on Arbitrum Sepolia.<br />
               The network will be added automatically if needed.
             </p>
             <button onClick={connectWallet} className="btn-primary">
@@ -382,7 +382,7 @@ function App() {
                   <circle cx="12" cy="12" r="10"/><path d="M4.93 4.93 19.07 19.07"/>
                   <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
                 </svg>
-                <span className="value">opBNB Testnet</span>
+                <span className="value">Arbitrum Sepolia</span>
               </div>
             </div>
 
@@ -429,7 +429,7 @@ function App() {
             {/* ── Virtual card visual ── */}
             <div className="virtual-card">
               <div className="vc-top">
-                <div className="vc-logo">PayClaw</div>
+                <div className="vc-logo">ClawPay</div>
               </div>
               <div className="vc-pan">
                 {card.pan
@@ -445,7 +445,7 @@ function App() {
                   <div className="vc-field-label">CVV</div>
                   <div className="vc-field-val">{card.cvv || '•••'}</div>
                 </div>
-                <div className="vc-brand">USDC Powered<br />opBNB Testnet</div>
+                <div className="vc-brand">USDC Powered<br />Arbitrum Sepolia</div>
               </div>
             </div>
 

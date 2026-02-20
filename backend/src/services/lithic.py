@@ -58,10 +58,10 @@ class LithicService:
         - Set spend_limit 5% higher than requested amount
         - Prevents failures from tax, shipping, fees added at checkout
         - Unused buffer is "trapped" in closed card after first charge
-        - Backend webhook handler refunds unused buffer as tBNB to user wallet
+        - Backend webhook handler refunds unused buffer as USDC to user wallet
 
         Args:
-            memo: Optional memo to attach to the card (e.g., opBNB tx hash)
+            memo: Optional memo to attach to the card (e.g., Arbitrum Sepolia tx hash)
             card_type: Card type - SINGLE_USE (default) or MERCHANT_LOCKED
             spend_limit_cents: Maximum amount in cents that can be charged to this card.
                              Should include 5% buffer (e.g., $100 item → $105 limit)
@@ -82,7 +82,7 @@ class LithicService:
         # Build card creation parameters
         create_params = {
             "type": "SINGLE_USE",
-            "memo": memo or "payclaw Single-Use Card",
+            "memo": memo or "clawpay Single-Use Card",
         }
         
         # Add spend limit if specified

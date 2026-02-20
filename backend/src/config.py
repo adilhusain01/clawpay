@@ -20,13 +20,13 @@ class Settings(BaseSettings):
     arb_chain_id: int = 421614
     # Platform wallet private key (hex, with or without 0x) - used to send refunds
     arb_platform_private_key: str = ""
-    # Deployed PayClawEscrow contract address (0x...)
+    # Deployed ClawPayEscrow contract address (0x...)
     arb_escrow_contract: str = ""
     # Deployed MockUSDC contract address (0x...)
     usdc_contract: str = ""
 
     # Database
-    database_url: str = "sqlite:///./payclaw.db"
+    database_url: str = "sqlite:///./clawpay.db"
 
     # Server
     host: str = "0.0.0.0"

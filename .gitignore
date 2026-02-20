@@ -3,7 +3,7 @@
 # Python
 backend/.env
 backend/.env.*
-backend/payclaw.db
+backend/clawpay.db
 backend/__pycache__/
 backend/.pytest_cache/
 backend/.mypy_cache/

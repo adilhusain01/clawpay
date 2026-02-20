@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 const TERMINAL_LINES = [
-  { t: 'cmd',  s: '$ payclaw buy "cadbury dairy milk"' },
+  { t: 'cmd',  s: '$ clawpay buy "cadbury dairy milk"' },
   { t: 'dim',  s: '  connecting to agent...' },
   { t: 'log',  s: '  ◆  browsing ChocoBazaar.io...' },
   { t: 'log',  s: '  ◆  found: Cadbury Dairy Milk · $4.99' },
@@ -22,14 +22,14 @@ const TERMINAL_LINES = [
 const LINE_DELAYS = { cmd: 900, dim: 300, log: 450, hi: 350, ok: 200, card: 150 }
 
 const STEPS = [
-  { icon: '🦀', label: 'Claw calls PayClaw', desc: 'Your agent hits the MCP tool with an amount. No human steps. No approval prompts.' },
+  { icon: '🦀', label: 'Claw calls ClawPay', desc: 'Your agent hits the MCP tool with an amount. No human steps. No approval prompts.' },
   { icon: '🔐', label: 'Escrow on-chain',    desc: 'USDC is deposited into a smart contract. Funds only move when the card is issued - you stay in control.' },
   { icon: '💳', label: 'Card issued',         desc: 'A single-use Lithic virtual card is created with an exact spend limit. Dead after one charge.' },
   { icon: '🌐', label: 'Pays anywhere',       desc: 'Agent uses the card at any website checkout. No merchant opt-in. Unused balance refunded.' },
 ]
 
 const STACK = [
-  { dot: '#f59e0b', label: 'opBNB Testnet' },
+  { dot: '#28a0f0', label: 'Arbitrum Sepolia' },
   { dot: '#2775ca', label: 'USDC (ERC-20)' },
   { dot: '#6366f1', label: 'Claude MCP'   },
   { dot: '#22c55e', label: 'Lithic Cards' },
@@ -308,7 +308,7 @@ function MCPModal({ onClose }) {
         <button className="modal-x" onClick={onClose}>×</button>
         <div className="modal-h">Install MCP Server</div>
         <div className="modal-sub">
-          Plug PayClaw into your agent (Claude, OpenClaw, or any MCP-compatible tool).
+          Plug ClawPay into your agent (Claude, or any MCP-compatible tool).
           Your agent gets two tools - it handles payments autonomously from there.
           No cards on file. No human approval loops.
         </div>
@@ -323,10 +323,10 @@ pip install -r requirements.txt`}</div>
         <div className="mcp-step">
           <div className="mcp-tag">2 · Configure .env</div>
           <div className="mcp-code">{`cp .env.example .env
-# Fund agent wallet with USDC on opBNB Testnet, then set:
+# Fund agent wallet with USDC on Arbitrum Sepolia, then set:
 AGENT_PRIVATE_KEY=0x...
-PAYCLAW_API_URL=https://payclaw-production-bad6.up.railway.app
-PAYCLAW_API_KEY=sk_payclaw_dev_...
+CLAWPAY_API_URL=https://payclaw-production-bad6.up.railway.app
+CLAWPAY_API_KEY=sk_payclaw_dev_...
 USDC_CONTRACT_ADDRESS=0x8353fF5b...
 ESCROW_CONTRACT_ADDRESS=0x4B4837...`}</div>
         </div>
@@ -335,9 +335,9 @@ ESCROW_CONTRACT_ADDRESS=0x4B4837...`}</div>
           <div className="mcp-tag">3 · Add to Claude Desktop</div>
           <div className="mcp-code">{`{
   "mcpServers": {
-    "payclaw": {
+    "clawpay": {
       "command": "python",
-      "args": ["/path/to/payclaw/mcp/server.py"]
+      "args": ["/path/to/clawpay/mcp/server.py"]
     }
   }
 }`}</div>
@@ -351,7 +351,7 @@ ESCROW_CONTRACT_ADDRESS=0x4B4837...`}</div>
           <div className="mcp-code" style={{color:'#e8e8f0'}}>{`# Your agent now has payment superpowers:
 "Buy me a Cadbury Dairy Milk from ChocoBazaar"
 
-# Claw calls PayClaw autonomously:
+# Claw calls ClawPay autonomously:
 #  ◆  deposits USDC into escrow on-chain
 #  ◆  receives a single-use virtual card
 #  ◆  checks out - no human needed
@@ -439,7 +439,7 @@ export default function Landing() {
               <div className="tdot tdot-r" />
               <div className="tdot tdot-y" />
               <div className="tdot tdot-g" />
-              <div className="term-ttl">payclaw-agent - zsh</div>
+              <div className="term-ttl">clawpay-agent - zsh</div>
             </div>
             <div className="term-body" ref={termRef}>
               {TERMINAL_LINES.slice(0, visibleLines).map((line, i) => (
@@ -517,9 +517,9 @@ export default function Landing() {
               </div>
               <div className="fc-desc">
                 A full e-commerce demo. Browse, enter shipping details, and checkout with
-                your PayClaw virtual card using the real Lithic sandbox payment flow.
+                your ClawPay virtual card using the real Lithic sandbox payment flow.
               </div>
-              <div className="fc-code" style={{color:'#4ade80'}}>payclaw.app/shop - powered by Lithic</div>
+              <div className="fc-code" style={{color:'#4ade80'}}>clawpay.app/shop - powered by Lithic</div>
               <span className="fc-arrow">Open ChocoBazaar →</span>
             </div>
 
@@ -532,7 +532,7 @@ export default function Landing() {
               </div>
               <div className="fc-desc">
                 Full codebase: FastAPI backend, React dashboard, MCP server,
-                and Solidity escrow contracts on opBNB Testnet.
+                and Solidity escrow contracts on Arbitrum Sepolia.
               </div>
               <div className="fc-code" style={{color:'#a855f7'}}>git clone github.com/adilhusain01/payclaw</div>
               <span className="fc-arrow">View on GitHub →</span>
@@ -559,8 +559,8 @@ export default function Landing() {
 
         {/* ── Footer ── */}
         <footer className="lp-footer">
-          <div className="footer-logo">PayClaw</div>
-          <div className="footer-note">opBNB Testnet · Lithic Sandbox · ETHGlobal Hackathon 2025</div>
+          <div className="footer-logo">ClawPay</div>
+          <div className="footer-note">Arbitrum Sepolia · Lithic Sandbox · ETHGlobal Hackathon 2025</div>
           <div className="footer-links">
             <button onClick={() => setShowMCP(true)}>MCP Docs</button>
             <button onClick={onShop}>Demo</button>

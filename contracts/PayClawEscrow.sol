@@ -2,21 +2,21 @@
 pragma solidity ^0.8.20;
 
 /**
- * @title PayClawEscrow
- * @notice Escrow contract for PayClaw payments on opBNB Testnet (chainId: 5611)
+ * @title ClawPayEscrow
+ * @notice Escrow contract for ClawPay payments on Arbitrum Sepolia (chainId: 421614)
  * @dev Users approve this contract to spend their MockUSDC, then call deposit().
  *      The backend listens for PaymentReceived events, creates a Lithic virtual
  *      card, and refunds any unused buffer in USDC after the merchant charges.
  *
  * Deploy order:
  *   1. Deploy MockUSDC.sol  → get USDC address
- *   2. Deploy PayClawEscrow(usdcAddress)
+ *   2. Deploy ClawPayEscrow(usdcAddress)
  *   3. Call MockUSDC.mint(agentWallet, amount) to fund the agent
  *
- * opBNB Testnet:
- *   ChainID : 5611 (0x15eb)
- *   RPC     : https://opbnb-testnet-rpc.bnbchain.org
- *   Explorer: https://testnet.opbnbscan.com
+ * Arbitrum Sepolia:
+ *   ChainID : 421614 (0x66eee2)
+ *   RPC     : https://arbitrum-sepolia-testnet.api.pocket.network
+ *   Explorer: https://sepolia.arbiscan.io
  */
 
 interface IERC20 {
@@ -24,7 +24,7 @@ interface IERC20 {
     function transfer(address to, uint256 amount) external returns (bool);
 }
 
-contract PayClawEscrow {
+contract ClawPayEscrow {
     address public owner;
     IERC20  public usdc;
 
@@ -36,7 +36,7 @@ contract PayClawEscrow {
      * @notice Emitted when a user deposits USDC for a payment session.
      * @param payer     The depositing wallet address
      * @param amount    Amount in USDC units (6 decimals)
-     * @param sessionId Unique session ID from the PayClaw backend
+     * @param sessionId Unique session ID from the ClawPay backend
      * @param timestamp Block timestamp of the deposit
      */
     event PaymentReceived(
@@ -63,7 +63,7 @@ contract PayClawEscrow {
     // -------------------------
 
     modifier onlyOwner() {
-        require(msg.sender == owner, "PayClawEscrow: not owner");
+        require(msg.sender == owner, "ClawPayEscrow: not owner");
         _;
     }
 
@@ -75,7 +75,7 @@ contract PayClawEscrow {
      * @param _usdc Address of the MockUSDC (or real USDC) token contract
      */
     constructor(address _usdc) {
-        require(_usdc != address(0), "PayClawEscrow: zero usdc address");
+        require(_usdc != address(0), "ClawPayEscrow: zero usdc address");
         owner = msg.sender;
         usdc  = IERC20(_usdc);
     }
@@ -91,10 +91,10 @@ contract PayClawEscrow {
      * @param amount    USDC amount in units (e.g. 52_500_000 = $52.50)
      */
     function deposit(string calldata sessionId, uint256 amount) external {
-        require(amount > 0, "PayClawEscrow: amount must be > 0");
+        require(amount > 0, "ClawPayEscrow: amount must be > 0");
         require(
             usdc.transferFrom(msg.sender, address(this), amount),
-            "PayClawEscrow: USDC transfer failed - did you approve?"
+            "ClawPayEscrow: USDC transfer failed - did you approve?"
         );
         emit PaymentReceived(msg.sender, amount, sessionId, block.timestamp);
     }
@@ -117,7 +117,7 @@ contract PayClawEscrow {
     ) external onlyOwner {
         require(
             usdc.transfer(recipient, amount),
-            "PayClawEscrow: USDC refund failed"
+            "ClawPayEscrow: USDC refund failed"
         );
         emit Refunded(recipient, amount, sessionId);
     }
@@ -129,7 +129,7 @@ contract PayClawEscrow {
     function withdraw(uint256 amount) external onlyOwner {
         require(
             usdc.transfer(owner, amount),
-            "PayClawEscrow: USDC withdraw failed"
+            "ClawPayEscrow: USDC withdraw failed"
         );
     }
 
@@ -138,7 +138,7 @@ contract PayClawEscrow {
      * @param newOwner New owner wallet
      */
     function transferOwnership(address newOwner) external onlyOwner {
-        require(newOwner != address(0), "PayClawEscrow: zero address");
+        require(newOwner != address(0), "ClawPayEscrow: zero address");
         owner = newOwner;
     }
 }

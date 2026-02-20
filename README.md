@@ -125,8 +125,8 @@ Add to your Claude Desktop config (`~/.claude/claude_desktop_config.json`):
       "args": ["/path/to/clawpay/mcp/server.py"],
       "env": {
         "AGENT_PRIVATE_KEY": "0x...",
-        "CLAWPAY_API_URL": "https://payclaw-production-bad6.up.railway.app",
-        "CLAWPAY_API_KEY": "sk_payclaw_..."
+        "CLAWPAY_API_URL": "https://clawpay-production.up.railway.app",
+        "CLAWPAY_API_KEY": "sk_clawpay_..."
       }
     }
   }
@@ -220,7 +220,7 @@ mcp/          MCP server - agent payment tools
 
 ## Deployed
 
-**Backend API**: [https://payclaw-production-bad6.up.railway.app](https://payclaw-production-bad6.up.railway.app)
+**Backend API**: [https://clawpay-production.up.railway.app](https://clawpay-production.up.railway.app)
 
 ## Notes
 

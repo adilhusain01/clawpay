@@ -315,8 +315,8 @@ function MCPModal({ onClose }) {
 
         <div className="mcp-step">
           <div className="mcp-tag">1 · Clone & install</div>
-          <div className="mcp-code">{`git clone https://github.com/adilhusain01/payclaw
-cd payclaw/mcp
+          <div className="mcp-code">{`git clone https://github.com/adilhusain01/clawpay
+cd clawpay/mcp
 pip install -r requirements.txt`}</div>
         </div>
 
@@ -325,8 +325,8 @@ pip install -r requirements.txt`}</div>
           <div className="mcp-code">{`cp .env.example .env
 # Fund agent wallet with USDC on Arbitrum Sepolia, then set:
 AGENT_PRIVATE_KEY=0x...
-CLAWPAY_API_URL=https://payclaw-production-bad6.up.railway.app
-CLAWPAY_API_KEY=sk_payclaw_dev_...
+CLAWPAY_API_URL=https://clawpay-production.up.railway.app
+CLAWPAY_API_KEY=sk_clawpay_dev_...
 USDC_CONTRACT_ADDRESS=0x8353fF5b...
 ESCROW_CONTRACT_ADDRESS=0x4B4837...`}</div>
         </div>
@@ -407,7 +407,7 @@ export default function Landing() {
           <div className="lp-nav-links">
             <button onClick={scrollToHow}>How it works</button>
             <button onClick={onShop}>Demo</button>
-            <a href="https://github.com/adilhusain01/payclaw" target="_blank" rel="noreferrer">GitHub</a>
+            <a href="https://github.com/adilhusain01/clawpay" target="_blank" rel="noreferrer">GitHub</a>
             <button className="lp-nav-cta" onClick={onGetCard}>Launch App</button>
           </div>
         </nav>
@@ -524,7 +524,7 @@ export default function Landing() {
             </div>
 
             {/* GitHub */}
-            <a className="fc purple" href="https://github.com/adilhusain01/payclaw" target="_blank" rel="noreferrer">
+            <a className="fc purple" href="https://github.com/adilhusain01/clawpay" target="_blank" rel="noreferrer">
               <div className="fc-icon purple">📦</div>
               <div className="fc-title">
                 View Source
@@ -534,7 +534,7 @@ export default function Landing() {
                 Full codebase: FastAPI backend, React dashboard, MCP server,
                 and Solidity escrow contracts on Arbitrum Sepolia.
               </div>
-              <div className="fc-code" style={{color:'#a855f7'}}>git clone github.com/adilhusain01/payclaw</div>
+              <div className="fc-code" style={{color:'#a855f7'}}>git clone github.com/adilhusain01/clawpay</div>
               <span className="fc-arrow">View on GitHub →</span>
             </a>
 
@@ -564,7 +564,7 @@ export default function Landing() {
           <div className="footer-links">
             <button onClick={() => setShowMCP(true)}>MCP Docs</button>
             <button onClick={onShop}>Demo</button>
-            <a href="https://github.com/adilhusain01/payclaw" target="_blank" rel="noreferrer">GitHub</a>
+            <a href="https://github.com/adilhusain01/clawpay" target="_blank" rel="noreferrer">GitHub</a>
           </div>
         </footer>
 

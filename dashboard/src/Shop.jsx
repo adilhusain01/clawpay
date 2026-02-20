@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-const BACKEND_URL = import.meta.env.DEV ? 'http://localhost:8000' : 'https://payclaw-production-bad6.up.railway.app'
-const API_KEY     = 'sk_payclaw_dev_b03352ef1d68164c675023b82538ea3d1d1902f69bc408b7'
+const BACKEND_URL = import.meta.env.DEV ? 'http://localhost:8000' : 'https://clawpay-production.up.railway.app'
+const API_KEY     = 'sk_clawpay_dev_b03352ef1d68164c675023b82538ea3d1d1902f69bc408b7'
 const UNIT_PRICE  = 4.99
 
 const sleep = ms => new Promise(r => setTimeout(r, ms))

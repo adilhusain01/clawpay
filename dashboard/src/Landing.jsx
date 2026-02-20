@@ -196,6 +196,10 @@ const CSS = `
   .fc.cyan:hover   { border-color:rgba(6,182,212,.38);   box-shadow:0 18px 52px rgba(6,182,212,.1); }
   .fc.green:hover  { border-color:rgba(74,222,128,.38);  box-shadow:0 18px 52px rgba(74,222,128,.1); }
   .fc.purple:hover { border-color:rgba(168,85,247,.38);  box-shadow:0 18px 52px rgba(168,85,247,.1); }
+  .fc.orange:hover { border-color:rgba(251,146,60,.38);  box-shadow:0 18px 52px rgba(251,146,60,.1); }
+  .fc-icon.orange  { background:rgba(251,146,60,.1);     border:1px solid rgba(251,146,60,.18); }
+  .badge-orange    { background:rgba(251,146,60,.14);    color:#fb923c; }
+  .fc.full-width   { grid-column:1/-1; }
   .fc-icon {
     width:52px; height:52px; border-radius:13px; display:flex; align-items:center;
     justify-content:center; font-size:1.5rem; margin-bottom:22px;
@@ -327,8 +331,8 @@ pip install -r requirements.txt`}</div>
 AGENT_PRIVATE_KEY=0x...
 CLAWPAY_API_URL=https://clawpay-production.up.railway.app
 CLAWPAY_API_KEY=sk_clawpay_dev_...
-USDC_CONTRACT_ADDRESS=0x8353fF5b...
-ESCROW_CONTRACT_ADDRESS=0x4B4837...`}</div>
+USDC_CONTRACT_ADDRESS=0xFCABF780284B0d5997914C5b1ab7Ac34F0F01eaE
+ESCROW_CONTRACT_ADDRESS=0x9ee0141d3FD09E4C15D183bD5017ef86e37b4254`}</div>
         </div>
 
         <div className="mcp-step">
@@ -362,12 +366,76 @@ ESCROW_CONTRACT_ADDRESS=0x4B4837...`}</div>
   )
 }
 
+function OpenClawModal({ onClose }) {
+  return (
+    <div className="modal-bg" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="modal-box">
+        <button className="modal-x" onClick={onClose}>×</button>
+        <div className="modal-h">OpenClaw Integration</div>
+        <div className="modal-sub">
+          Add ClawPay as an OpenClaw plugin. Your agent gets{' '}
+          <code style={{color:'#fb923c',fontFamily:'JetBrains Mono',fontSize:'.82rem'}}>buy_virtual_card</code>{' '}
+          and{' '}
+          <code style={{color:'#fb923c',fontFamily:'JetBrains Mono',fontSize:'.82rem'}}>check_wallet_balance</code>{' '}
+          — fully autonomous, no human steps.
+        </div>
+
+        <div className="mcp-step">
+          <div className="mcp-tag" style={{color:'#fb923c'}}>1 · Create plugin directory</div>
+          <div className="mcp-code">{`mkdir -p ~/.openclaw/extensions/clawpay
+cd ~/.openclaw/extensions/clawpay`}</div>
+          <div className="mcp-note">
+            Copy <code>package.json</code>, <code>openclaw.plugin.json</code>, and <code>index.ts</code> from the{' '}
+            <a href="https://github.com/adilhusain01/clawpay" target="_blank" rel="noreferrer"
+              style={{color:'#fb923c',textDecoration:'none'}}>GitHub README →</a>
+          </div>
+        </div>
+
+        <div className="mcp-step">
+          <div className="mcp-tag" style={{color:'#fb923c'}}>2 · Install & configure</div>
+          <div className="mcp-code">{`npm install`}</div>
+        </div>
+
+        <div className="mcp-step">
+          <div className="mcp-tag" style={{color:'#fb923c'}}>3 · Add to openclaw.json</div>
+          <div className="mcp-code">{`// ~/.openclaw/openclaw.json
+"tools": {
+  "allow": ["buy_virtual_card", "check_wallet_balance"]
+},
+"plugins": {
+  "entries": {
+    "clawpay": {
+      "enabled": true,
+      "config": {
+        "privateKey": "0x<your-wallet-private-key>",
+        "apiKey":     "sk_clawpay_..."
+      }
+    }
+  }
+}`}</div>
+        </div>
+
+        <div className="mcp-step">
+          <div className="mcp-tag" style={{color:'#fb923c'}}>4 · Restart & verify</div>
+          <div className="mcp-code">{`openclaw gateway restart
+openclaw plugins list        # clawpay → "loaded"
+openclaw plugins info clawpay`}</div>
+          <div className="mcp-note">
+            Your agent can now pay on any website the moment you say <em>"buy X for $Y"</em>.
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function Landing() {
   const navigate = useNavigate()
   const onGetCard = () => navigate('/pay')
   const onShop    = () => navigate('/shop')
   const [visibleLines, setVisibleLines] = useState(0)
   const [showMCP, setShowMCP]           = useState(false)
+  const [showOpenClaw, setShowOpenClaw] = useState(false)
   const termRef                          = useRef(null)
 
   // Terminal animation
@@ -403,7 +471,7 @@ export default function Landing() {
 
         {/* ── Nav ── */}
         <nav className="lp-nav">
-          <div className="lp-logo">Pay<em>Claw</em></div>
+          <div className="lp-logo">Claw<em>Pay</em></div>
           <div className="lp-nav-links">
             <button onClick={scrollToHow}>How it works</button>
             <button onClick={onShop}>Demo</button>
@@ -422,8 +490,8 @@ export default function Landing() {
               In crypto.
             </h1>
             <p className="lp-sub">
-              Abstract layer between your claw and the web. It deposits USDC, gets a
-              single-use virtual card - uses on any site, securely and autonomously
+              ClawPay sits between your agent and the web. It deposits USDC, gets a
+              single-use virtual card — works on any site, securely and autonomously.
             </p>
             <div className="lp-ctas">
               <button className="btn-hero-p" onClick={onGetCard}>Get a Virtual Card →</button>
@@ -538,6 +606,25 @@ export default function Landing() {
               <span className="fc-arrow">View on GitHub →</span>
             </a>
 
+            {/* OpenClaw */}
+            <div className="fc orange full-width" onClick={() => setShowOpenClaw(true)} role="button" tabIndex={0}
+              onKeyDown={e => e.key === 'Enter' && setShowOpenClaw(true)}>
+              <div className="fc-icon orange">🦀</div>
+              <div className="fc-title">
+                OpenClaw Integration
+                <span className="fc-badge badge-orange">Plugin</span>
+              </div>
+              <div className="fc-desc">
+                Running OpenClaw? Add ClawPay as a plugin in four steps — your agent inherits{' '}
+                <span style={{color:'#fb923c',fontFamily:'JetBrains Mono',fontSize:'.82rem'}}>buy_virtual_card</span>{' '}
+                and{' '}
+                <span style={{color:'#fb923c',fontFamily:'JetBrains Mono',fontSize:'.82rem'}}>check_wallet_balance</span>{' '}
+                instantly. No MCP server needed.
+              </div>
+              <div className="fc-code" style={{color:'#fb923c'}}>openclaw plugins info clawpay  →  Tools: buy_virtual_card, check_wallet_balance</div>
+              <span className="fc-arrow">View setup instructions →</span>
+            </div>
+
           </div>
         </section>
 
@@ -569,6 +656,7 @@ export default function Landing() {
         </footer>
 
         {showMCP && <MCPModal onClose={() => setShowMCP(false)} />}
+        {showOpenClaw && <OpenClawModal onClose={() => setShowOpenClaw(false)} />}
       </div>
     </>
   )

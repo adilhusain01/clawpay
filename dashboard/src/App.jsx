@@ -188,17 +188,24 @@ function App() {
       const signer = await provider.getSigner()
       const usdcAmount = BigInt(session.usdc_amount)
 
+      // Fetch live fee data and apply 2× buffer so MetaMask never falls below base fee
+      const feeData = await provider.getFeeData()
+      const gasOverrides = {
+        maxFeePerGas: feeData.maxFeePerGas * 2n,
+        maxPriorityFeePerGas: feeData.maxPriorityFeePerGas,
+      }
+
       // 2a. Approve USDC spending
       setStatus(`Approving ${session.usdc_amount_display} USDC - confirm in MetaMask...`)
       const usdc = new ethers.Contract(session.usdc_contract, ERC20_ABI, signer)
-      const approveTx = await usdc.approve(session.contract_address, usdcAmount)
+      const approveTx = await usdc.approve(session.contract_address, usdcAmount, gasOverrides)
       setStatus('Approval submitted - waiting for confirmation...')
       await approveTx.wait()
 
       // 2b. Deposit USDC into escrow
       setStatus(`Depositing ${session.usdc_amount_display} into escrow - confirm in MetaMask...`)
       const escrow = new ethers.Contract(session.contract_address, ESCROW_ABI, signer)
-      const tx = await escrow.deposit(session.session_id, usdcAmount)
+      const tx = await escrow.deposit(session.session_id, usdcAmount, gasOverrides)
 
       setStatus('Deposit submitted - waiting for confirmation...')
       const receipt = await tx.wait()

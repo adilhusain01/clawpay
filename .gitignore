@@ -83,3 +83,6 @@ backend/test_event_detection.py
 backend/test_webhook_flow.py
 
 
+
+!.env.example
+!**/.env.example
